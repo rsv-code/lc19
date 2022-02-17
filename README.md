@@ -1,6 +1,11 @@
 # lc19
 Launch Complex 19 - The Java Gemini Server
 
+# Installation
+If you run a Debian based version of Linux you're 
+probably in luck. There's a .deb installer which makes 
+things easy. 
+
 # Java KeyStore 
 
 SSL is a Gemini requirement so a Java KeyStore must be 

@@ -26,34 +26,22 @@ if [[ "$?" -ne 0 ]] ; then
 fi
 
 # Packaging Dir
-PKGDIR=/tmp/$APPNAME
+PKGDIR=$APPNAME-bin
 
 # Create the packaging directory
-mkdir -p $PKGDIR/DEBIAN
+mkdir -p $PKGDIR
 
 # Copy Files
-mkdir -p $PKGDIR/opt/lc19
-cp target/lc19-*-full.jar $PKGDIR/opt/lc19
-chmod 755 $PKGDIR/opt/lc19/lc19-*-full.jar
-cp app.properties $PKGDIR/opt/lc19
-cp LICENSE.txt $PKGDIR/opt/lc19
-cp serverkeystore.jks $PKGDIR/opt/lc19
-mkdir $PKGDIR/opt/lc19/public
-cp public/index.gmi $PKGDIR/opt/lc19/public
+cp target/lc19-*-full.jar $PKGDIR
+chmod 755 $PKGDIR/lc19-*-full.jar
+cp app.properties $PKGDIR
+cp LICENSE.txt $PKGDIR
+cp serverkeystore.jks $PKGDIR
+mkdir $PKGDIR/public
+cp public/index.gmi $PKGDIR/public
 
-# Copy debian files
-cp -f package-files/control $PKGDIR/DEBIAN
-cp -f package-files/postinst $PKGDIR/DEBIAN
-
-# Copy systemd files
-mkdir -p $PKGDIR/etc/systemd/system/
-cp -R -f package-files/systemd/* $PKGDIR/etc/systemd/system
-
-# Create the package
-dpkg-deb --build $PKGDIR
-
-# Copy deb file back here
-mv $PKGDIR.deb .
+# Zip up the directory
+zip -r $PKGDIR.zip $PKGDIR
 
 # Remove the packaging dir
 rm -r -f $PKGDIR
