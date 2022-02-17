@@ -1,10 +1,22 @@
 # lc19
 Launch Complex 19 - The Java Gemini Server
 
+Copyright 2022 Austin Lehman <austin@rosevillecode.com>
+
 # Installation
 If you run a Debian based version of Linux you're 
 probably in luck. There's a .deb installer which makes 
-things easy. 
+things easy. Otherwise you can download the binary 
+zipped file or build the source here. 
+
+# Building from Source
+
+After running the maven command you should have the 
+generated .jar file in the target directory. 
+
+```
+mvn clean package
+```
 
 # Java KeyStore 
 
@@ -23,6 +35,23 @@ you can set it to 'localhost'.
 
 # Configuration
 
+Configuration is done in the app.properties file. The 
+following properties are available.
+
+- keystore.file - The keystore filename to use.
+- keystore.password - The keystore password to 
+  ues along with the provided keystore file.
+- port - The port to serve Gemini content on. Default is 
+  '1965'.
+- hostname - A string with the hostname this 
+  server uses. This is used to limit requests to only 
+  the name provided here. Default is 'localhost'.
+- hostDir - The directory to host Gemini files from. 
+  Default is 'public'.
+- minThreads - The minimum number of threads to use in 
+  the thread pool. Default is 10.
+- maxThreads - The maximum number of threads to use in 
+  the thread pool. Default is 100.
 
 # License
 
