@@ -24,6 +24,9 @@ import javax.net.ssl.SSLSocket;
 import java.io.*;
 import java.nio.file.Files;
 
+/**
+ * ServerThread class implements the functionality of the server thread.
+ */
 public class ServerThread implements Runnable {
     private final static Logger log = LoggerFactory.getLogger(Main.class);
 
@@ -33,11 +36,19 @@ public class ServerThread implements Runnable {
     protected BufferedReader in = null;
     protected PrintWriter out = null;
 
+    /**
+     * Default constructor.
+     * @param SInfo is a ServerInfo object with the server information.
+     * @param Soc is the SSLSocket to use.
+     */
     public ServerThread(ServerInfo SInfo, SSLSocket Soc) {
         this.serverInfo = SInfo;
         this.soc = Soc;
     }
 
+    /**
+     * Runs the server thread.
+     */
     @Override
     public void run() {
         log.info("ServerThread handling new request.");
@@ -59,11 +70,21 @@ public class ServerThread implements Runnable {
         }
     }
 
+    /**
+     * Reads in the request line and produces a
+     * GeminiRequest object.
+     * @return A GeminiRequest object.
+     * @throws IOException
+     */
     private GeminiRequest readRequest() throws IOException {
         String line = in.readLine();
         return new GeminiRequest(line.trim());
     }
 
+    /**
+     * Creates the response with the provided request.
+     * @param req is a GeminiRequest object.
+     */
     private void createResponse(GeminiRequest req) {
         GeminiStatusCodeDetail status = GeminiStatusCodeDetail.TEMPORARY_FAILURE;
 
@@ -92,6 +113,11 @@ public class ServerThread implements Runnable {
         log.info("Response: " + status.toString());
     }
 
+    /**
+     * Checks to see if the request is good and valid.
+     * @param req is the GeminiRequest object.
+     * @return A boolean with true for valid and false for not.
+     */
     private boolean isGoodRequest(GeminiRequest req) {
         if (req.getPath().contains("..")) {
             log.info("Bad request: " + req.rawRequest);
@@ -107,6 +133,13 @@ public class ServerThread implements Runnable {
         return true;
     }
 
+    /**
+     * Attempts to fetch a file from the host directory with the
+     * provided GeminiRequest object.
+     * @param req is the GeminiRequest object.
+     * @return A String with the file contents or empty String.
+     * @throws IOException
+     */
     private String getFileFromHostDir(GeminiRequest req) throws IOException {
         String ret = "";
         if (this.serverInfo.getHostDir() != null && !this.serverInfo.getHostDir().equals("")) {
@@ -119,6 +152,12 @@ public class ServerThread implements Runnable {
         return ret;
     }
 
+    /**
+     * Tries to find the requested file with the provided
+     * GeminiRequest object.
+     * @param req is the GeminiRequest object.
+     * @return A File object if found and null if not.
+     */
     private File findGeminiFile(GeminiRequest req) {
         File ret = null;
 
