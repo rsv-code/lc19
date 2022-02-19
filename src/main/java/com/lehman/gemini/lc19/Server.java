@@ -17,6 +17,7 @@
 
 package com.lehman.gemini.lc19;
 
+import org.reflections.Reflections;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -25,7 +26,12 @@ import javax.net.ssl.SSLServerSocketFactory;
 import javax.net.ssl.SSLSocket;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Properties;
+import java.util.Set;
 import java.util.concurrent.RejectedExecutionHandler;
 import java.util.concurrent.SynchronousQueue;
 import java.util.concurrent.ThreadPoolExecutor;
@@ -73,6 +79,9 @@ public class Server {
     // SSL server socket
     private SSLServerSocket serverSocket = null;
 
+    // Capsules map
+    private Map<String, Class> capsules = new HashMap<String, Class>();
+
     /**
      * Default constructor
      */
@@ -85,6 +94,7 @@ public class Server {
     public void init() {
         try {
             this.initThreadPool();
+            this.initCapsules();
             this.serverSocket = this.createServerSocket(this.port);
         } catch (IOException e) {
             log.error(e.getMessage());
@@ -102,7 +112,7 @@ public class Server {
                 SSLSocket soc = (SSLSocket) this.serverSocket.accept();
                 log.info("New client connection from '" + soc.getInetAddress().getHostAddress() + "'.");
 
-                ServerThread st = new ServerThread(this.getServerInfo(), soc);
+                ServerThread st = new ServerThread(this.getServerInfo(), soc, this.capsules);
                 this.threadPool.execute(st);
             } catch (IOException e) {
                 log.error(e.getMessage());
@@ -131,6 +141,42 @@ public class Server {
         this.setMaxThreads(Integer.parseInt(props.getProperty("maxThreads", "100")));
 
         this.setHostDir(props.getProperty("hostDir", null));
+    }
+
+    /**
+     * Initializes any capsules. This searches all classes for the @Capsule annotation
+     * and then puts them in the capsules Map which is used later to look up the
+     * class to use with the provided path.
+     */
+    private void initCapsules() {
+        Reflections reflections = new Reflections("com.lehman.gemini.lc19");
+        Set<Class<?>> capsuleClasses = reflections.getTypesAnnotatedWith(Capsule.class);
+        for (Class c : capsuleClasses) {
+            try {
+                Method m = c.getMethod("handle", new Class[]{ GeminiRequest.class });
+                if (m == null) {
+                    log.warn("Capsule class '" + c.getName() + "' found but is missing a function: public GeminiResponse handle (GeminiRequest req)");
+                } else if (m.getReturnType() != GeminiResponse.class) {
+                    log.warn("Capsule class '" + c.getName() + "' handle function returns type '" + m.getReturnType().getName() + "' but expecting 'GeminiResponse'.");
+                } else if ((m.getModifiers() & Modifier.PUBLIC) == 0) {
+                    log.warn("Capsule class '" + c.getName() + "' handle function is not public.");
+                } else {
+                    Capsule capsule = (Capsule) c.getAnnotation(Capsule.class);
+                    String path = capsule.path();
+                    if (path == null || path.equals("")) {
+                        path = "/";
+                    }
+                    if (!path.startsWith("/")) path = "/" + path;
+                    if (path.length() > 1 && path.endsWith("/")) path = path.substring(0, path.length() - 1);
+
+                    // Add the capsul
+                    log.info("Loaded capsule: " + c.getName() + " (" + path + ")");
+                    this.capsules.put(path, c);
+                }
+            } catch (NoSuchMethodException e) {
+                log.error(e.getMessage());
+            }
+        }
     }
 
     /**

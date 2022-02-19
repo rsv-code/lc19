@@ -22,7 +22,10 @@ import org.slf4j.LoggerFactory;
 
 import javax.net.ssl.SSLSocket;
 import java.io.*;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.nio.file.Files;
+import java.util.Map;
 
 /**
  * ServerThread class implements the functionality of the server thread.
@@ -36,14 +39,18 @@ public class ServerThread implements Runnable {
     protected BufferedReader in = null;
     protected PrintWriter out = null;
 
+    // Reference to the capsule map.
+    private Map<String, Class> capsules;
+
     /**
      * Default constructor.
      * @param SInfo is a ServerInfo object with the server information.
      * @param Soc is the SSLSocket to use.
      */
-    public ServerThread(ServerInfo SInfo, SSLSocket Soc) {
+    public ServerThread(ServerInfo SInfo, SSLSocket Soc, Map<String, Class> Capsules) {
         this.serverInfo = SInfo;
         this.soc = Soc;
+        this.capsules = Capsules;
     }
 
     /**
@@ -86,8 +93,6 @@ public class ServerThread implements Runnable {
      * @param req is a GeminiRequest object.
      */
     private void createResponse(GeminiRequest req) {
-        GeminiStatusCodeDetail status = GeminiStatusCodeDetail.TEMPORARY_FAILURE;
-
         // Bad request
         if (!this.isGoodRequest(req)) {
             this.out.print(GeminiStatusCodeDetail.BAD_REQUEST.getValue() + " \r\n");
@@ -95,22 +100,70 @@ public class ServerThread implements Runnable {
             return;
         }
 
-        String data = null;
-        try {
-            data = this.getFileFromHostDir(req);
-        } catch (IOException e) {
-            log.error(e.getMessage());
-            status = GeminiStatusCodeDetail.NOT_FOUND;
+        // Attempt to find a capsule and execute it
+        GeminiResponse resp = this.getCapsuleResponse(req);
+
+        // Didn't find a response with the module, let's try a file.
+        if (resp == null) {
+            resp = this.getFileResponse(req);
         }
 
-        if (!data.equals("")) {
-            status = GeminiStatusCodeDetail.SUCCESS;
-            this.out.print(status.getValue() + " " + GeminiMediaType.TEXT_GEMINI.getValue() + "; lang=en; charset=utf-8\r\n");
-            this.out.println(data);
-        } else {
-            this.out.print(status.getValue() + " \r\n");
+        out.print(resp.build());
+        log.info("Response: " + resp.getStatus().toString());
+    }
+
+    /**
+     * Attempts to find a matching module and if so it executes the
+     * request and returns the response.
+     * @param req is the GeminiRequest object.
+     * @return A GeminiResponse object with the response if found and
+     * null if not.
+     */
+    private GeminiResponse getCapsuleResponse(GeminiRequest req) {
+        GeminiResponse resp = null;
+
+        String reqPath = req.getPath();
+        if (reqPath.length() > 1 && reqPath.endsWith("/"))
+            reqPath = reqPath.substring(0, reqPath.length() - 1);
+
+        Class c = this.capsules.get(reqPath);
+        if (c != null) {
+            try {
+                Object obj = c.getDeclaredConstructor().newInstance();
+                Method m = c.getMethod("handle", new Class[]{ GeminiRequest.class });
+                resp = (GeminiResponse) m.invoke(obj, req);
+            } catch (InstantiationException e) {
+                log.error(e.getMessage());
+            } catch (IllegalAccessException e) {
+                log.error(e.getMessage());
+            } catch (InvocationTargetException e) {
+                log.error(e.getMessage());
+            } catch (NoSuchMethodException e) {
+                log.error(e.getMessage());
+            }
         }
-        log.info("Response: " + status.toString());
+
+        return resp;
+    }
+
+    /**
+     * Attempts to find a matching file and if so it returns the response.
+     * @param req is the GeminiRequest object.
+     * @return A GeminiResponse object with the response if found and
+     * null if not.
+     */
+    private GeminiResponse getFileResponse(GeminiRequest req) {
+        GeminiResponse resp = new GeminiResponse();
+
+        String data = null;
+        try {
+            resp.setData(this.getFileFromHostDir(req));
+        } catch (IOException e) {
+            log.error(e.getMessage());
+            resp.setStatus(GeminiStatusCodeDetail.NOT_FOUND);
+        }
+
+        return resp;
     }
 
     /**
