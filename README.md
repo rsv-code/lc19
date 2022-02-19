@@ -57,6 +57,24 @@ following properties are available.
 - maxThreads - The maximum number of threads to use in 
   the thread pool. Default is 100.
 
+# Dynamic Capsules
+
+The lc19 code can be used as a library in your project 
+to create your own server and extend its functionality. 
+You can use annotations to create dynamic content using 
+capsules.
+
+```
+@Capsule(path = "/hello")
+public class hello implements CapsuleInt {
+    public GeminiResponse handle(GeminiRequest req) {
+        GeminiResponse resp = new GeminiResponse();
+        resp.setData("Hello from the hello capsule!");
+        return resp;
+    }
+}
+```
+
 # License
 
 This application is licensed under the GNU Lesser General Public License. Please see the included LICENSE.txt file for details or find a copy on the GNU website [GNU Lesser General Public License](https://www.gnu.org/licenses/lgpl-3.0.en.html).
