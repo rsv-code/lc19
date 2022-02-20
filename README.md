@@ -73,7 +73,26 @@ First include the Maven dependency.
 </dependency>
 ```
 
+Next write the server startup code in your application.
+```
+// Create a new server object.
+Server s = new Server();
 
+// Load properties from file.
+s.loadProperties("app.properties");
+
+// Init the server.
+s.init();
+
+// Run it.
+s.run();
+```
+
+Finally creat a new class and use the Capsule annotation 
+along with the path. When a request is made to 
+gemini://localhost/hello in this case, handle will be 
+called and 
+the string response will be sent back.
 
 ```
 @Capsule(path = "/hello")
