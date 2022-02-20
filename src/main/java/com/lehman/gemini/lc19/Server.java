@@ -17,7 +17,7 @@
 
 package com.lehman.gemini.lc19;
 
-import org.reflections.Reflections;
+import eu.infomas.annotation.AnnotationDetector;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -26,12 +26,10 @@ import javax.net.ssl.SSLServerSocketFactory;
 import javax.net.ssl.SSLSocket;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Properties;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.RejectedExecutionHandler;
 import java.util.concurrent.SynchronousQueue;
 import java.util.concurrent.ThreadPoolExecutor;
@@ -148,9 +146,27 @@ public class Server {
      * and then puts them in the capsules Map which is used later to look up the
      * class to use with the provided path.
      */
-    private void initCapsules() {
-        Reflections reflections = new Reflections("com.lehman.gemini.lc19");
-        Set<Class<?>> capsuleClasses = reflections.getTypesAnnotatedWith(Capsule.class);
+    private void initCapsules() throws IOException {
+        ArrayList<Class> capsuleClasses = new ArrayList<Class>();
+        final AnnotationDetector.TypeReporter reporter = new AnnotationDetector.TypeReporter() {
+            @Override
+            public void reportTypeAnnotation(Class<? extends Annotation> aClass, String s) {
+                try {
+                    Class<?> c = Class.forName(s);
+                    capsuleClasses.add(c);
+                } catch (ClassNotFoundException e) {
+                    log.error(e.getMessage());
+                }
+            }
+            @SuppressWarnings("unchecked")
+            @Override
+            public Class<? extends Annotation>[] annotations() {
+                return new Class[]{Capsule.class};
+            }
+        };
+        final AnnotationDetector cf = new AnnotationDetector(reporter);
+        cf.detect();
+
         for (Class c : capsuleClasses) {
             try {
                 Method m = c.getMethod("handle", new Class[]{ GeminiRequest.class });

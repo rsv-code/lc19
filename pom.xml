@@ -6,7 +6,7 @@
 
     <groupId>io.github.rsv-code</groupId>
     <artifactId>lc19</artifactId>
-    <version>1.0.2</version>
+    <version>1.0.3</version>
     <packaging>jar</packaging>
 
     <name>lc19</name>
@@ -47,6 +47,7 @@
         <log4j.version>2.17.1</log4j.version>
         <slf4j.version>1.7.32</slf4j.version>
         <reflections.version>0.10.2</reflections.version>
+        <annotation.version>3.0.5</annotation.version>
     </properties>
 
     <build>
@@ -179,9 +180,9 @@
             <version>${slf4j.version}</version>
         </dependency>
         <dependency>
-            <groupId>org.reflections</groupId>
-            <artifactId>reflections</artifactId>
-            <version>${reflections.version}</version>
+            <groupId>eu.infomas</groupId>
+            <artifactId>annotation-detector</artifactId>
+            <version>${annotation.version}</version>
         </dependency>
     </dependencies>
 

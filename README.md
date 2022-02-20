@@ -57,12 +57,23 @@ following properties are available.
 - maxThreads - The maximum number of threads to use in 
   the thread pool. Default is 100.
 
-# Dynamic Capsules
+# Dynamic Capsules - Embedded Server
 
 The lc19 code can be used as a library in your project 
 to create your own server and extend its functionality. 
 You can use annotations to create dynamic content using 
 capsules.
+
+First include the Maven dependency.
+```
+<dependency>
+  <groupId>io.github.rsv-code</groupId>
+  <artifactId>lc19</artifactId>
+  <version>1.0.3</version>
+</dependency>
+```
+
+
 
 ```
 @Capsule(path = "/hello")
