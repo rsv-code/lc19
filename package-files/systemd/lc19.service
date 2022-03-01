@@ -8,7 +8,7 @@ Type=simple
 Restart=always
 RestartSec=1
 WorkingDirectory=/opt/lc19
-ExecStart=java -jar lc19-1.0-full.jar
+ExecStart=/bin/bash -c "java -jar lc19-*-full.jar"
 
 [Install]
 WantedBy=multi-user.target
