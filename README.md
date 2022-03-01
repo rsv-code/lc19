@@ -10,8 +10,8 @@ things easy. Otherwise you can download the binary
 zipped file or build the source here. 
 
 Downloads:
-- Debian Package: [lc19.deb](https://github.com/rsv-code/lc19/releases/download/1.0.3/lc19.deb)
-- Binary Zip: [lc19-bin.zip](https://github.com/rsv-code/lc19/releases/download/1.0.3/lc19-bin.zip)
+- Debian Package: [lc19.deb](https://github.com/rsv-code/lc19/releases/download/1.0.4/lc19.deb)
+- Binary Zip: [lc19-bin.zip](https://github.com/rsv-code/lc19/releases/download/1.0.4/lc19-bin.zip)
 
 # Building from Source
 
